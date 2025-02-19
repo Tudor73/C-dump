@@ -69,12 +69,11 @@ void pool_free(Pool *p, void *ptr)
 
 void pool_init(Pool *p, size_t length, size_t chunk_size, void *buf)
 {
-
     p->count = 0;
     assert(chunk_size >= sizeof(Free_List_Node) && "Chunk size is too small");
     assert(length >= chunk_size && "Buffer length smaller than chunk size");
 
-    p->buf = (char *)buf;
+    p->buf = (unsigned char *)buf;
     p->len = length;
     p->chunk_size = chunk_size;
     p->head = NULL;
@@ -87,7 +86,6 @@ int main()
     char buf[1000];
     Pool p;
     pool_init(&p, 1000, 10, buf);
-
     char *a = (char *)pool_aloc(&p);
 
     char *b = (char *)pool_aloc(&p);
