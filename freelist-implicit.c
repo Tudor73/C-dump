@@ -26,8 +26,8 @@ void *alloc(char *heap, size_t length)
 
             if (h->size > length)
             {
-                offset += (length + sizeof(Header));
-                Header *newBlock = (Header *)&heap[offset];
+                int next_offset = offset + (length + sizeof(Header));
+                Header *newBlock = (Header *)&heap[next_offset];
                 newBlock->size = h->size - length - sizeof(Header);
                 newBlock->free = true;
             }
@@ -39,6 +39,7 @@ void *alloc(char *heap, size_t length)
         }
         if (offset + sizeof(Header) >= SIZE)
             break;
+
         offset += (h->size + sizeof(Header));
         h = (Header *)&heap[offset];
     }
@@ -48,7 +49,21 @@ void *alloc(char *heap, size_t length)
 void free(void *p)
 {
     Header *h = (Header *)((char *)p - sizeof(Header));
+
+    char *heap_base = (char *)Heap;
+    size_t next_offset = (char *)h - heap_base + sizeof(Header) + h->size;
+
     h->free = true;
+
+    if (next_offset + sizeof(Header) <= SIZE)
+    {
+        Header *nextBlock = (Header *)&heap_base[next_offset];
+        if (nextBlock->free)
+        {
+
+            h->size += sizeof(Header) + nextBlock->size;
+        }
+    }
 }
 
 void init(char *heap)
@@ -67,8 +82,13 @@ int main()
     strncpy(p, "aaaa", 10);
     strncpy(b, "bvbbb", 10);
     printf("%s, %s", p, b);
-    free(p);
+
+    // this doesn't work because coalescing looks only ahead. If I want to look behind as well, I need a duplicated header after the block.
+    // free(p);
+    // free(b);
     free(b);
+    free(p);
     char *c = (char *)alloc(Heap, 2000);
+    strncpy(c, "ccccc", 10);
     printf("%s", c);
 }
